@@ -1,0 +1,93 @@
+version: '3.8'
+
+x-postgres-env: &postgres-env
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: Strong!Pa55word
+
+x-app-env: &app-env
+  DB_HOST_MAIN: db-main
+  DB_HOST_REPLICA1: db-replica1
+  DB_HOST_REPLICA2: db-replica2
+  DB_USER: postgres
+  DB_PASSWORD: Strong!Pa55word
+  DB_NAME: appdb
+
+services:
+  db-main:
+    image: postgres:15
+    container_name: db-main
+    restart: always
+    environment:
+      <<: *postgres-env
+      POSTGRES_DB: appdb
+    volumes:
+      - ./postgres/init-primary.sh:/docker-entrypoint-initdb.d/init-primary.sh
+      - db_main_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-replica1:
+    image: postgres:15
+    container_name: db-replica1
+    depends_on:
+      db-main:
+        condition: service_healthy
+    restart: always
+    environment:
+      <<: *postgres-env
+    volumes:
+      - ./postgres/init-replica.sh:/docker-entrypoint-initdb.d/init-replica.sh
+      - db_replica1_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-replica2:
+    image: postgres:15
+    container_name: db-replica2
+    depends_on:
+      db-main:
+        condition: service_healthy
+    restart: always
+    environment:
+      <<: *postgres-env
+    volumes:
+      - ./postgres/init-replica2.sh:/docker-entrypoint-initdb.d/init-replica2.sh
+      - db_replica2_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: ./app
+    container_name: node-app
+    restart: on-failure
+    environment:
+      <<: *app-env
+    ports:
+      - "3000:3000"
+    depends_on:
+      db-main:
+        condition: service_healthy
+      db-replica1:
+        condition: service_healthy
+      db-replica2:
+        condition: service_healthy
+
+volumes:
+  db_main_data:
+  db_replica1_data:
+  db_replica2_data: 
