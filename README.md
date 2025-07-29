@@ -9,7 +9,7 @@ This example demonstrates how to create a lightweight Node.js application, conta
 The infrastructure consists of:
 - **Primary Database**: Handles all write operations and serves as the source for replication
 - **Replica 1**: Immediate read replica for fast read operations
-- **Replica 2**: Delayed read replica (1-minute delay) for data protection
+- **Replica 2**: Delayed read replica (1-minute delay) for testing delayed replication locally
 - **Node.js Application**: Fastify server with automatic replica distribution using Drizzle ORM
 
 ## Folder Structure
