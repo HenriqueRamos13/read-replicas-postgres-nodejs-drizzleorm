@@ -137,7 +137,7 @@ curl -X DELETE http://localhost:3000/tasks/1
 - **Read Operations**: Automatically distributed between replicas
 - **Write Operations**: Always directed to primary database
 - **Failover**: Automatically configured by Drizzle ORM
-- **Delayed Replica**: Replica 2 has a 1-minute delay to protect against data corruption
+- **Delayed Replica**: Replica 2 has a 1-minute delay for testing delayed replication
 
 ## Environment Variables
 
